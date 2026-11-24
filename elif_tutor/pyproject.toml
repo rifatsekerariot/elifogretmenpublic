@@ -1,0 +1,13 @@
+[project]
+name = "elif_tutor"
+version = "1.0.0"
+description = "Elif Ogretmen - Ev Odevi Asistani, Sure Takibi ve Odev Zamani Notu (Frappe App)"
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["elif_tutor*"]

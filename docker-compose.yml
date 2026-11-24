@@ -1,0 +1,77 @@
+services:
+  odev-mariadb:
+    image: mariadb:10.6
+    container_name: elif-mariadb
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: "0.35"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+      - --innodb-buffer-pool-size=48M
+      - --max-connections=100
+      - --wait-timeout=120
+      - --interactive-timeout=120
+      - --performance-schema=OFF
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD is required}
+      MYSQL_PWD: ${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD is required}
+    volumes:
+      - elif-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  odev-redis:
+    image: redis:7-alpine
+    container_name: elif-redis
+    restart: unless-stopped
+    mem_limit: 48m
+    cpus: "0.15"
+    command: ["redis-server", "--maxmemory", "32mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+
+  odev-frappe:
+    image: frappe/erpnext:v15
+    container_name: elif-frappe
+    restart: unless-stopped
+    mem_limit: 448m
+    cpus: "0.60"
+    depends_on:
+      odev-mariadb:
+        condition: service_healthy
+      odev-redis:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:-odev.localhost}
+    ports:
+      - "127.0.0.1:8095:8000"
+    volumes:
+      - ./sites:/home/frappe/frappe-bench/sites
+      - ./elif_tutor:/home/frappe/frappe-bench/apps/elif_tutor
+    entrypoint: ["bash", "-c"]
+    command:
+      - |
+        set -e
+        cd /home/frappe/frappe-bench
+        if ! /home/frappe/frappe-bench/env/bin/python -c "import elif_tutor" 2>/dev/null; then
+          /home/frappe/frappe-bench/env/bin/pip install --no-deps --no-build-isolation -e apps/elif_tutor
+        fi
+        exec /home/frappe/frappe-bench/env/bin/gunicorn \
+          --chdir=/home/frappe/frappe-bench/sites \
+          --bind=0.0.0.0:8000 \
+          --workers=2 \
+          --worker-class=sync \
+          --max-requests=500 \
+          --max-requests-jitter=50 \
+          --timeout=120 \
+          --preload \
+          frappe.app:application
+
+volumes:
+  elif-db-data:

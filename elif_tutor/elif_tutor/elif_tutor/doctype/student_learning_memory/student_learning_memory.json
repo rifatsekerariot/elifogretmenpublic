@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "autoname": "format:MEM-{####}",
+ "creation": "2026-11-24 17:07:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "owner_user",
+  "subject",
+  "topic",
+  "mastery_status",
+  "column_break_counts",
+  "solved_count",
+  "mistake_count",
+  "last_practiced",
+  "section_notes",
+  "struggle_notes",
+  "strength_notes"
+ ],
+ "fields": [
+  {"fieldname": "owner_user", "fieldtype": "Link", "in_list_view": 1, "label": "Öğrenci Kullanıcısı", "options": "User", "reqd": 1, "search_index": 1},
+  {"fieldname": "subject", "fieldtype": "Select", "in_list_view": 1, "label": "Ders", "options": "Matematik\nFen Bilimleri\nTürkçe\nİngilizce\nSosyal Bilgiler\nDin Kültürü", "reqd": 1, "search_index": 1},
+  {"fieldname": "topic", "fieldtype": "Data", "in_list_view": 1, "label": "Konu", "reqd": 1, "search_index": 1},
+  {"fieldname": "mastery_status", "fieldtype": "Select", "in_list_view": 1, "label": "Durum", "options": "learning\nneeds_review\nmastered", "default": "learning"},
+  {"fieldname": "column_break_counts", "fieldtype": "Column Break"},
+  {"fieldname": "solved_count", "fieldtype": "Int", "in_list_view": 1, "label": "Doğru Sayısı", "default": "0"},
+  {"fieldname": "mistake_count", "fieldtype": "Int", "in_list_view": 1, "label": "Takılma/Hata Sayısı", "default": "0"},
+  {"fieldname": "last_practiced", "fieldtype": "Datetime", "label": "Son Çalışma"},
+  {"fieldname": "section_notes", "fieldtype": "Section Break", "label": "Öğrenme Özet Hafızası"},
+  {"fieldname": "struggle_notes", "fieldtype": "Small Text", "label": "Takıldığı Noktalar"},
+  {"fieldname": "strength_notes", "fieldtype": "Small Text", "label": "Güçlü Olduğu Noktalar"}
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-24 17:07:00.000000",
+ "modified_by": "Administrator",
+ "module": "Elif Tutor",
+ "name": "Student Learning Memory",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}
+ ],
+ "sort_field": "last_practiced",
+ "sort_order": "DESC",
+ "states": []
+}

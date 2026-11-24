@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.DS_Store
+sites/
+*.sqlite3
+*.log
+*.pem
+*.key

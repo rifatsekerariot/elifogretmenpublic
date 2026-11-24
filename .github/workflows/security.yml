@@ -1,0 +1,43 @@
+name: Security & Syntax Checks
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Python syntax check
+        run: |
+          find elif_tutor -name "*.py" -print0 | xargs -0 python -m py_compile
+
+      - name: JavaScript syntax check
+        run: |
+          for f in elif_tutor/elif_tutor/public/js/*.js; do
+            node --check "$f"
+          done
+
+      - name: Secret pattern scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
