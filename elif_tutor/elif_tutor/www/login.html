@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <style>
     :root {
       --cream-bg: #fbf6ee;
@@ -43,15 +44,12 @@
       text-align: center;
     }
 
-    .ed-headline {
-      font-family: "Anton", sans-serif;
-      font-size: clamp(2.9rem, 7vw, 4.6rem);
-      line-height: 0.96;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      color: var(--plum);
-      margin-bottom: 24px;
-      text-shadow: 0 2px 18px rgba(251, 246, 238, 0.9);
+    .login-brand-logo {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      margin-bottom: 22px;
+      filter: drop-shadow(0 2px 10px rgba(74, 14, 46, 0.12));
     }
 
     .login-card {
@@ -138,7 +136,7 @@
 </head>
 <body>
   <main class="hero-wrap">
-    <h1 class="ed-headline">ELİF ÖĞRETMEN</h1>
+    <img src="/assets/elif_tutor/images/elif-ogretmen-logo.svg" alt="Elif Öğretmen" class="login-brand-logo" />
 
     <div class="login-card">
       <form id="login-form">
@@ -152,10 +150,10 @@
           <label for="pwd">Parola</label>
           <div class="field-wrap">
             <input id="pwd" type="password" required autocomplete="current-password" placeholder="••••••••" />
-            <button type="button" id="btn-toggle-pwd" class="toggle-pwd">Göster</button>
+            <button type="button" id="btn-toggle-pwd" class="toggle-pwd" aria-label="Parolayı Göster"><i data-lucide="eye" id="icon-pwd" style="width:16px;height:16px;vertical-align:middle;"></i></button>
           </div>
         </div>
-        <button type="submit" id="btn-submit" class="btn-login">GİRİŞ YAP</button>
+        <button type="submit" id="btn-submit" class="btn-login" style="display:flex;align-items:center;justify-content:center;gap:8px;"><i data-lucide="log-in" style="width:18px;height:18px;"></i> <span>GİRİŞ YAP</span></button>
         <div id="err" class="err-msg"></div>
       </form>
     </div>
@@ -167,8 +165,14 @@
     toggleBtn.onclick = () => {
       const isPwd = pwdInput.type === "password";
       pwdInput.type = isPwd ? "text" : "password";
-      toggleBtn.textContent = isPwd ? "Gizle" : "Göster";
+      const icon = document.getElementById("icon-pwd");
+      if (icon) {
+        icon.setAttribute("data-lucide", isPwd ? "eye-off" : "eye");
+        if (window.lucide) lucide.createIcons();
+      }
     };
+
+    if (window.lucide) lucide.createIcons();
 
     document.getElementById("login-form").onsubmit = async (e) => {
       e.preventDefault();
@@ -196,7 +200,8 @@
         err.textContent = "Bağlantı hatası, tekrar deneyin.";
       }
       btn.disabled = false;
-      btn.textContent = "GİRİŞ YAP";
+      btn.innerHTML = '<i data-lucide="log-in" style="width:18px;height:18px;"></i> <span>GİRİŞ YAP</span>';
+      if (window.lucide) lucide.createIcons();
     };
   </script>
 </body>

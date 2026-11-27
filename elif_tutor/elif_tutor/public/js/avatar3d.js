@@ -100,10 +100,14 @@ class TeacherAvatar3D {
 
   _renderFallback() {
     this.container.innerHTML =
-      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;">' +
-      '<div style="font-size:4.2rem;">👩‍🏫</div>' +
-      '<div style="font-weight:700;color:#4a0e2e;">Elif Öğretmen</div></div>' +
-      '<span id="avatar-emotion-pill" class="avatar-badge">😊 Hazır</span>';
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;">' +
+      '<div style="width:68px;height:68px;border-radius:50%;background:rgba(5,117,188,0.12);display:flex;align-items:center;justify-content:center;color:#0575bc;">' +
+      '<i data-lucide="sparkles" style="width:36px;height:36px;"></i></div>' +
+      '<div style="font-weight:700;color:#350820;font-size:0.95rem;">Elif Öğretmen</div></div>' +
+      '<span id="avatar-emotion-pill" class="avatar-badge"><i data-lucide="check" class="icon-xs"></i> <span>Hazır</span></span>';
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      try { window.lucide.createIcons({ root: this.container }); } catch (_) {}
+    }
   }
 
   _initScene() {
@@ -148,7 +152,12 @@ class TeacherAvatar3D {
 
   _loadModel(url) {
     const badge = document.getElementById("avatar-emotion-pill");
-    if (badge) badge.textContent = "⏳ 3D Öğretmen Yükleniyor...";
+    if (badge) {
+      badge.innerHTML = '<i data-lucide="loader-2" class="icon-xs spin"></i> <span>3D Model Yükleniyor...</span>';
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        try { window.lucide.createIcons({ root: badge }); } catch (_) {}
+      }
+    }
 
     const loader = new THREE.GLTFLoader();
     loader.load(
@@ -189,7 +198,12 @@ class TeacherAvatar3D {
         this._setMorph("jawOpen", 0);
         this._setMorph("mouthOpen", 0);
         this._setMorph("mouthSmile", 0.24);
-        if (badge) badge.textContent = "😊 Ödev Sayfası Bekliyor";
+        if (badge) {
+          badge.innerHTML = '<i data-lucide="message-square" class="icon-xs"></i> <span>Ödev Sayfası Bekliyor</span>';
+          if (window.lucide && typeof window.lucide.createIcons === "function") {
+            try { window.lucide.createIcons({ root: badge }); } catch (_) {}
+          }
+        }
       },
       undefined,
       (err) => {

@@ -11,15 +11,20 @@ from typing import Any, Dict, List, Optional
 import frappe
 from frappe.utils import get_datetime, now_datetime
 
+from elif_tutor.compaction_service import compact_messages
 from elif_tutor.gemini_service import (
     analyze_homework_page,
+    apply_whiteboard_action,
     chat_socratic_turn,
     introduce_resumed_question,
     synthesize_tts,
+    transcribe_audio,
 )
 from elif_tutor.memory_service import (
+    apply_autonomous_memory_actions,
     get_relevant_long_term_memory,
     list_learning_memories,
+    recall_pedagogical_memories,
     record_learning_memory,
 )
 
@@ -71,6 +76,31 @@ def _require_login():
 def _norm_q(text: str) -> str:
     clean = re.sub(r"[^a-z0-9çğıöşü]+", " ", (text or "").lower()).strip()
     return re.sub(r"\s+", " ", clean)
+
+
+def _get_student_name_and_grade(user_id: Optional[str] = None) -> Tuple[str, str]:
+    target_user = user_id or (getattr(frappe, "session", None) and getattr(frappe.session, "user", None))
+    sname = ""
+    sgrade = ""
+    if target_user and target_user not in ("Guest", "None"):
+        try:
+            fn = frappe.db.get_value("User", target_user, "first_name")
+            full = frappe.db.get_value("User", target_user, "full_name")
+            if fn and fn.strip() and fn.lower() not in ("administrator", "admin", "guest"):
+                sname = fn.strip()
+            elif full and full.strip() and full.lower() not in ("administrator", "admin", "guest"):
+                sname = full.strip().split()[0]
+        except Exception:
+            pass
+    if not sname:
+        n = (os.getenv("STUDENT_NAME") or "").strip()
+        if n and n.lower() not in ("öğrenci", "ogrenci", "student"):
+            sname = n
+    if not sgrade:
+        sgrade = (os.getenv("STUDENT_GRADE") or "5. Sınıf").strip()
+    if sname.lower() in ("öğrenci", "ogrenci", "student", "null", "none"):
+        sname = ""
+    return sname, sgrade
 
 
 def _q_hash(text: str) -> str:
@@ -125,6 +155,7 @@ def _serialize_sheet(doc) -> Dict[str, Any]:
         "time_grade": doc.time_grade or "Devam Ediyor",
         "tokens_used": int(doc.tokens_used or 0),
         "active_question_no": int(doc.active_question_no or 1),
+        "image_data": getattr(doc, "image_data", "") or getattr(doc, "original_file_url", "") or "",
         "whiteboard": wb,
         "messages": msgs,
         "questions": questions,
@@ -216,8 +247,9 @@ def upload_homework_page(subject: str = "Matematik", note: str = ""):
     fname = _validate_upload(f.filename or "odev.jpg", mime, file_bytes)
     note = (note or "").strip()[:MAX_NOTE_CHARS]
 
+    sname, sgrade = _get_student_name_and_grade(frappe.session.user)
     lt_mem = get_relevant_long_term_memory(frappe.session.user, subject, topic="", query_text=note, limit=2)
-    res, tokens = analyze_homework_page(file_bytes, mime, subject, note, long_term_memory=lt_mem)
+    res, tokens = analyze_homework_page(file_bytes, mime, subject, note, long_term_memory=lt_mem, student_name=sname, student_grade=sgrade)
     subj = res.get("subject") if res.get("subject") in VALID_SUBJECTS else subject
     topic = (res.get("topic") or subj)[:80]
     extracted = res.get("questions") or []
@@ -353,8 +385,8 @@ def upload_homework_page(subject: str = "Matematik", note: str = ""):
             )
         emotion = "celebrate"
         wb = {
-            "title": f"✅ {doc.title} • {doc.time_grade}",
-            "steps": [f"✅ Soru {r.question_no}: {(r.question_text or '')[:85]}" for r in doc.questions],
+            "title": f"{doc.title} • {doc.time_grade}",
+            "steps": [f"Soru {r.question_no} (Tamamlandı): {(r.question_text or '')[:85]}" for r in doc.questions],
             "latex": "",
             "drawing": {"type": "none", "params": {}},
         }
@@ -384,8 +416,8 @@ def upload_homework_page(subject: str = "Matematik", note: str = ""):
                 wb = intro["whiteboard"]
 
     msgs = json.loads(doc.messages_json or "[]")
-    msgs.append({"role": "Öğrenci (Ödev Sayfası)", "text": note or f"📄 {doc.title} ({len(doc.questions)} soru)", "time": now_t})
-    msgs.append({"role": "Elif Öğretmen", "text": spoken, "emotion": emotion, "time": now_t})
+    msgs.append({"role": "Öğrenci (Ödev Sayfası)", "text": note or f"{doc.title} ({len(doc.questions)} soru)", "time": now_t})
+    msgs.append({"role": tname, "text": spoken, "emotion": emotion, "time": now_t})
 
     doc.messages_json = json.dumps(msgs[-40:], ensure_ascii=False)
     doc.whiteboard_json = json.dumps(wb, ensure_ascii=False)
@@ -441,7 +473,7 @@ def open_sheet(sheet_id: str, question_no: Optional[int] = None):
             doc.whiteboard_json = json.dumps(intro["whiteboard"], ensure_ascii=False)
         doc.tokens_used = int(doc.tokens_used or 0) + tokens
         msgs = json.loads(doc.messages_json or "[]")
-        msgs.append({"role": "Elif Öğretmen", "text": spoken, "emotion": emotion, "time": now_t})
+        msgs.append({"role": tname, "text": spoken, "emotion": emotion, "time": now_t})
         doc.messages_json = json.dumps(msgs[-40:], ensure_ascii=False)
         doc.save(ignore_permissions=True)
         frappe.db.commit()
@@ -450,9 +482,10 @@ def open_sheet(sheet_id: str, question_no: Optional[int] = None):
 
 
 @frappe.whitelist()
-def chat_turn(sheet_id: str, text: str):
+def chat_turn(sheet_id: str, text: str, teacher_name: str = "Elif Öğretmen", teacher_gender: str = "female"):
     _require_login()
     student_msg = (text or "").strip()[:MAX_CHAT_CHARS]
+    tname = (teacher_name or "Elif Öğretmen").strip()
     if not student_msg:
         frappe.throw("Boş cevap gönderilemez.")
 
@@ -486,31 +519,55 @@ def chat_turn(sheet_id: str, text: str):
     ]
     solved_nos = [int(r.question_no) for r in doc.questions if r.status == "solved"]
 
-    lt_mem = get_relevant_long_term_memory(
-        frappe.session.user,
+    active_q_dict = {
+        "question_no": int(active_row.question_no) if active_row else 1,
+        "question_text": active_row.question_text if active_row else "",
+        "latex": active_row.latex if active_row else "",
+        "correct_solution_hidden": active_row.correct_solution_hidden if active_row else "",
+    }
+    compacted_msgs, briefing = compact_messages(msgs, active_q_dict, subject=doc.subject)
+
+    target_user = doc.owner_user or frappe.session.user
+    pedagogical_mem = recall_pedagogical_memories(
+        target_user,
         doc.subject,
         topic=doc.topic or "",
         query_text=f"{active_row.question_text if active_row else ''} {student_msg}",
-        limit=2,
+        limit=3,
     )
+
+    try:
+        curr_wb = json.loads(doc.whiteboard_json or "{}")
+    except Exception:
+        curr_wb = {}
+
+    tname = teacher_name or "Elif Öğretmen"
+    sname, sgrade = _get_student_name_and_grade(target_user)
+
     res, tokens = chat_socratic_turn(
         subject=doc.subject,
-        active_question={
-            "question_no": int(active_row.question_no) if active_row else 1,
-            "question_text": active_row.question_text if active_row else "",
-            "latex": active_row.latex if active_row else "",
-            "correct_solution_hidden": active_row.correct_solution_hidden if active_row else "",
-        },
+        active_question=active_q_dict,
         homework_memory={
             "active_status": active_row.status if active_row else "in_progress",
             "previous_student_answers": prev_ans,
             "sheet_solved_question_nos": solved_nos,
             "sheet_pending_questions": pending_list,
         },
-        recent_messages=msgs,
+        recent_messages=compacted_msgs,
         student_text=student_msg,
-        long_term_memory=lt_mem,
+        long_term_memory=pedagogical_mem.get("academic"),
+        compaction_briefing=briefing,
+        pedagogical_memory=pedagogical_mem,
+        current_whiteboard=curr_wb,
+        teacher_name=tname,
+        teacher_gender=teacher_gender or "female",
+        student_name=sname,
+        student_grade=sgrade,
     )
+
+    # Modelin otonom hafıza aksiyonlarını (set/update/delete) anında kalıcı olarak işle
+    if res.get("memory_actions"):
+        apply_autonomous_memory_actions(target_user, res["memory_actions"], default_subject=doc.subject)
 
     q_status = res.get("question_status") or "in_progress"
     step_note = (res.get("student_step_summary") or "").strip()
@@ -556,7 +613,8 @@ def chat_turn(sheet_id: str, text: str):
             doc.active_question_no = nxt_no
 
     if res.get("whiteboard"):
-        doc.whiteboard_json = json.dumps(res["whiteboard"], ensure_ascii=False)
+        merged_wb = apply_whiteboard_action(curr_wb, res["whiteboard"])
+        doc.whiteboard_json = json.dumps(merged_wb, ensure_ascii=False)
     doc.tokens_used = int(doc.tokens_used or 0) + tokens
     doc.save(ignore_permissions=True)
 
@@ -568,7 +626,7 @@ def chat_turn(sheet_id: str, text: str):
         spoken += f" Harikasın! Bu ödev sayfasının tamamını {dur_txt} bitirdin! Ödev Zamanı Notun: {doc.time_grade}."
         emotion = "celebrate"
 
-    msgs.append({"role": "Elif Öğretmen", "text": spoken, "emotion": emotion, "time": now_t})
+    msgs.append({"role": tname, "text": spoken, "emotion": emotion, "time": now_t})
     doc.messages_json = json.dumps(msgs[-40:], ensure_ascii=False)
     doc.save(ignore_permissions=True)
     frappe.db.commit()
@@ -577,10 +635,119 @@ def chat_turn(sheet_id: str, text: str):
 
 
 @frappe.whitelist()
-def tts_audio(text: str):
+def tts_audio(text: str, voice: str = "Aoede"):
     _require_login()
     clean = (text or "").strip()[:MAX_TTS_CHARS]
     if not clean:
         frappe.throw("Metin boş.")
-    audio_bytes, mime = synthesize_tts(clean)
+    audio_bytes, mime = synthesize_tts(clean, voice=voice or "Aoede")
     return {"audio_b64": base64.b64encode(audio_bytes).decode("ascii"), "mime": mime}
+
+
+@frappe.whitelist()
+def stt_audio(audio_b64: str = "", mime: str = "audio/webm"):
+    _require_login()
+    if not audio_b64 and frappe.request.files:
+        for k in ("file", "audio", "audio_data"):
+            if k in frappe.request.files:
+                f = frappe.request.files[k]
+                audio_bytes = f.read()
+                mime = f.content_type or mime
+                text = transcribe_audio(audio_bytes, mime_type=mime)
+                return {"text": text}
+    if audio_b64:
+        if "," in audio_b64:
+            audio_b64 = audio_b64.split(",", 1)[1]
+        audio_bytes = base64.b64decode(audio_b64)
+        text = transcribe_audio(audio_bytes, mime_type=mime)
+        return {"text": text}
+    return {"text": ""}
+
+
+@frappe.whitelist()
+def start_freeform_homework(question_text: str, subject: str = "Matematik", teacher_name: str = "Elif Öğretmen", teacher_gender: str = "female"):
+    """Öğrenci kağıt yüklemeden doğrudan soru sorduğunda yeni bir serbest ödev oturumu başlatır."""
+    _require_login()
+    clean_q = (question_text or "").strip()
+    if not clean_q:
+        frappe.throw("Soru metni boş olamaz.")
+    clean_subj = subject if subject in VALID_SUBJECTS else "Matematik"
+    now_t = datetime.now().strftime("%H:%M")
+    sname, sgrade = _get_student_name_and_grade(frappe.session.user)
+
+    doc = frappe.get_doc({
+        "doctype": "Homework Sheet",
+        "title": f"{clean_subj} — {clean_q[:35]}...",
+        "owner_user": frappe.session.user,
+        "subject": clean_subj,
+        "topic": clean_q[:50],
+        "started_at": now_datetime(),
+        "status": "in_progress",
+        "active_question_no": 1,
+        "time_score": 100,
+        "time_grade": "A+",
+        "tokens_used": 0,
+        "messages_json": json.dumps([{"role": "Öğrenci", "text": clean_q, "time": now_t}], ensure_ascii=False),
+        "whiteboard_json": json.dumps({
+            "title": f"{clean_subj} • Soru 1",
+            "steps": [f"Soru: {clean_q}"],
+            "latex": "",
+            "drawing": {"type": "none", "params": {}},
+        }, ensure_ascii=False),
+        "questions": [
+            {
+                "question_no": 1,
+                "question_text": clean_q,
+                "latex": "",
+                "status": "in_progress",
+                "attempts": 0,
+                "duration_seconds": 0,
+                "student_answers_json": json.dumps([clean_q], ensure_ascii=False),
+            }
+        ],
+    })
+    doc.insert(ignore_permissions=True)
+
+    res, tokens = chat_socratic_turn(
+        subject=clean_subj,
+        active_question={"question_no": 1, "question_text": clean_q, "latex": ""},
+        homework_memory={"active_status": "in_progress", "sheet_solved_question_nos": [], "sheet_pending_questions": []},
+        recent_messages=[{"role": "Öğrenci", "text": clean_q}],
+        student_text=clean_q,
+        teacher_name=teacher_name,
+        teacher_gender=teacher_gender,
+        student_name=sname,
+        student_grade=sgrade,
+    )
+
+    spoken = res.get("spoken_text") or f"Sorunu tahtaya aldım! Hadi adım adım birlikte bakalım: {clean_q[:60]}"
+    emotion = res.get("emotion") or "happy"
+
+    if res.get("whiteboard") and isinstance(res["whiteboard"], dict):
+        wb = apply_whiteboard_action(json.loads(doc.whiteboard_json), res["whiteboard"])
+        doc.whiteboard_json = json.dumps(wb, ensure_ascii=False)
+
+    msgs = json.loads(doc.messages_json)
+    msgs.append({"role": teacher_name, "text": spoken, "emotion": emotion, "time": now_t})
+    doc.messages_json = json.dumps(msgs, ensure_ascii=False)
+    doc.tokens_used = tokens
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {"sheet": _serialize_sheet(doc), "spoken_text": spoken, "emotion": emotion}
+
+
+@frappe.whitelist()
+def delete_sheet(sheet_id: str):
+    """Ödev sayfasını ve ilişkili soruları veritabanından siler."""
+    _require_login()
+    if not frappe.db.exists("Homework Sheet", sheet_id):
+        return {"success": False, "message": "Ödev sayfası bulunamadı."}
+    doc = frappe.get_doc("Homework Sheet", sheet_id)
+    if doc.owner_user != frappe.session.user and "System Manager" not in frappe.get_roles():
+        frappe.throw("Bu ödevi silme yetkiniz yok.", frappe.PermissionError)
+    frappe.delete_doc("Homework Sheet", sheet_id, force=1)
+    frappe.db.commit()
+    return {"success": True, "sheet_id": sheet_id}
+
+
