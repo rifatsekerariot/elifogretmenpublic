@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <radialGradient id="ahmet-bg" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#eff6ff"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </radialGradient>
+    <linearGradient id="ahmet-border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <!-- Skin Shading -->
+    <linearGradient id="ahmet-skin" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff2ea"/>
+      <stop offset="60%" stop-color="#fde4d4"/>
+      <stop offset="100%" stop-color="#f5caa6"/>
+    </linearGradient>
+    <linearGradient id="ahmet-neck-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e2a882"/>
+      <stop offset="100%" stop-color="#f7ceb2"/>
+    </linearGradient>
+    <!-- Hair Gradients -->
+    <linearGradient id="ahmet-hair" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2b232a"/>
+      <stop offset="50%" stop-color="#181318"/>
+      <stop offset="100%" stop-color="#0a080a"/>
+    </linearGradient>
+    <linearGradient id="ahmet-hair-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#524550" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#181318" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Outfit Gradients -->
+    <linearGradient id="ahmet-cardigan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="50%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="ahmet-cardigan-trim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <!-- Soft Drop Shadow Filter -->
+    <filter id="soft-shadow-ahmet" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1e3a8a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Background Circle & Subtle Outer Ring -->
+  <circle cx="140" cy="140" r="132" fill="url(#ahmet-bg)"/>
+  <circle cx="140" cy="140" r="132" fill="none" stroke="url(#ahmet-border)" stroke-width="4" opacity="0.45"/>
+  <circle cx="140" cy="140" r="126" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="4 6" opacity="0.3"/>
+
+  <!-- Background Math / Science Accents -->
+  <path d="M50 82 L70 82 M60 72 L60 92" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+  <path d="M226 80 L238 68 M238 80 L226 68" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round" opacity="0.4"/>
+  <circle cx="64" cy="190" r="3.5" fill="#3b82f6" opacity="0.25"/>
+  <circle cx="220" cy="180" r="4" fill="#1d4ed8" opacity="0.25"/>
+
+  <!-- Back Hair Silhouette -->
+  <g id="back-hair" filter="url(#soft-shadow-ahmet)">
+    <path d="M92 110 C90 60 190 60 188 110 C190 145 186 160 180 172 L100 172 C94 160 90 145 92 110 Z" fill="url(#ahmet-hair)"/>
+  </g>
+
+  <!-- Shoulders & Outfit (Navy Cardigan + Collared Shirt) -->
+  <g id="body" filter="url(#soft-shadow-ahmet)">
+    <!-- Base Cardigan -->
+    <path d="M54 280 C58 220 90 196 122 188 L140 210 L158 188 C190 196 222 220 226 280 Z" fill="url(#ahmet-cardigan)"/>
+    <!-- Crisp Oxford Collared Shirt (Light Sky Blue) -->
+    <path d="M118 188 L140 224 L162 188 L140 172 Z" fill="#ffffff"/>
+    <path d="M120 186 L140 200 L126 196 Z" fill="#e0f2fe"/>
+    <path d="M160 186 L140 200 L154 196 Z" fill="#e0f2fe"/>
+    <!-- Cardigan Left Placket & V-Neck Trim -->
+    <path d="M88 280 C92 230 110 200 126 188 L140 224 L118 280 Z" fill="url(#ahmet-cardigan-trim)"/>
+    <!-- Cardigan Right Placket -->
+    <path d="M192 280 C188 230 170 200 154 188 L140 224 L162 280 Z" fill="url(#ahmet-cardigan-trim)"/>
+    <!-- Buttons -->
+    <circle cx="140" cy="238" r="2.5" fill="#e2e8f0"/>
+    <circle cx="140" cy="258" r="2.5" fill="#e2e8f0"/>
+    <!-- Pen in Pocket Accent -->
+    <rect x="94" y="242" width="4" height="18" rx="2" fill="#93c5fd"/>
+    <rect x="94" y="242" width="4" height="4" rx="1" fill="#f59e0b"/>
+  </g>
+
+  <!-- Neck & Shadow -->
+  <path d="M124 156 L124 188 C132 194 148 194 156 188 L156 156 Z" fill="url(#ahmet-neck-shadow)"/>
+  <ellipse cx="140" cy="184" rx="15" ry="4" fill="#d9996e" opacity="0.45"/>
+
+  <!-- Head Base -->
+  <g id="head" filter="url(#soft-shadow-ahmet)">
+    <path d="M96 122 C94 86 108 68 140 68 C172 68 186 86 184 122 C184 154 168 178 140 178 C112 178 96 154 96 122 Z" fill="url(#ahmet-skin)"/>
+    <path d="M126 172 Q140 178 154 172" stroke="#d58f60" stroke-width="2" fill="none" opacity="0.35"/>
+  </g>
+
+  <!-- Ears -->
+  <ellipse cx="94" cy="126" rx="5" ry="9" fill="#fcd0bd"/>
+  <ellipse cx="94" cy="126" rx="3" ry="5" fill="#f3af96"/>
+  <ellipse cx="186" cy="126" rx="5" ry="9" fill="#fcd0bd"/>
+  <ellipse cx="186" cy="126" rx="3" ry="5" fill="#f3af96"/>
+
+  <!-- Face Details -->
+  <!-- Eyebrows (Strong, Confident) -->
+  <path d="M106 106 Q118 101 128 105" stroke="#1f181f" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M152 105 Q162 101 174 106" stroke="#1f181f" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Intelligent Reassuring Eyes -->
+  <g id="eyes">
+    <ellipse cx="118" cy="120" rx="9" ry="9.5" fill="#ffffff"/>
+    <ellipse cx="118" cy="120" rx="7" ry="8" fill="#1e293b"/>
+    <circle cx="118" cy="119" r="4.5" fill="#0f172a"/>
+    <circle cx="115.5" cy="117" r="2.6" fill="#ffffff"/>
+    <circle cx="120" cy="122" r="1.2" fill="#ffffff"/>
+    <path d="M108 114 Q118 111 128 114" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <ellipse cx="162" cy="120" rx="9" ry="9.5" fill="#ffffff"/>
+    <ellipse cx="162" cy="120" rx="7" ry="8" fill="#1e293b"/>
+    <circle cx="162" cy="119" r="4.5" fill="#0f172a"/>
+    <circle cx="159.5" cy="117" r="2.6" fill="#ffffff"/>
+    <circle cx="164" cy="122" r="1.2" fill="#ffffff"/>
+    <path d="M152 114 Q162 111 172 114" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Modern Intellectual Round Glasses (Dark Navy / Slate) -->
+  <g id="glasses">
+    <circle cx="118" cy="120" r="15" fill="rgba(255,255,255,0.16)" stroke="#0f172a" stroke-width="2.8"/>
+    <circle cx="162" cy="120" r="15" fill="rgba(255,255,255,0.16)" stroke="#0f172a" stroke-width="2.8"/>
+    <path d="M133 118 Q140 115 147 118" stroke="#0f172a" stroke-width="2.8" fill="none"/>
+    <path d="M96 116 L103 118" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M177 118 L184 116" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Glare Reflection -->
+    <path d="M108 112 Q114 110 118 110" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+    <path d="M152 112 Q158 110 162 110" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+  </g>
+
+  <!-- Nose -->
+  <path d="M138 126 Q140 134 145 133" stroke="#d58f60" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+
+  <!-- Calm Approachable Smile -->
+  <g id="smile">
+    <path d="M125 149 Q140 162 155 149" fill="#1e3a8a"/>
+    <path d="M127 150 Q140 156 153 150" fill="#ffffff"/>
+    <path d="M123 148 Q140 164 157 148" stroke="#1e293b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Front Haircut (Modern Styled Quiff / Side-Part Volume) -->
+  <g id="front-hair">
+    <path d="M92 108 C94 62 118 48 142 48 C170 48 188 62 188 106 C180 84 162 76 142 76 C122 76 104 84 92 108 Z" fill="url(#ahmet-hair)"/>
+    <path d="M110 56 Q140 48 168 56" stroke="url(#ahmet-hair-shine)" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- Textured Strands -->
+    <path d="M126 50 Q142 64 154 62" stroke="#524550" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M94 104 C94 116 96 128 98 136 C98 122 96 112 94 104 Z" fill="url(#ahmet-hair)"/>
+    <path d="M186 104 C186 116 184 128 182 136 C182 122 184 112 186 104 Z" fill="url(#ahmet-hair)"/>
+  </g>
+</svg>

@@ -11,3 +11,9 @@ sites/
 *.log
 *.pem
 *.key
+
+# Yerel Gelistirme ve Onizleme Scriptleri
+preview_server.py
+baslat.bat
+test_*.py
+*.tmp

@@ -4,11 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Elif Öğretmen — Ev Ödevi Asistanı</title>
-  <link rel="stylesheet" href="/assets/elif_tutor/css/odev.css?v=4" />
+  <link rel="stylesheet" href="/assets/elif_tutor/css/odev.css?v=15" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script>
     window.FRAPPE_CSRF_TOKEN = {{ csrf_token | tojson }};
     window.FRAPPE_USER = {{ user_fullname | tojson }};
@@ -17,38 +18,43 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="logo-mark">ÖDV</div>
-      <div>
-        <h1>Elif Öğretmen <span class="badge">Ev Ödevi Asistanı • Frappe</span></h1>
-        <p>Hoş geldin, <strong>{{ user_fullname | e }}</strong> — Yüklenen ödev sayfalarını birlikte çözelim</p>
-      </div>
+      <a href="/odev" title="Elif Öğretmen" style="display:inline-flex;align-items:center;">
+        <img src="/assets/elif_tutor/images/elif-ogretmen-logo.svg" alt="Elif Öğretmen" class="topbar-logo" />
+      </a>
     </div>
     <div class="top-actions">
-      <span id="pill-timer" class="pill pill-timer">⏱ Ödev Süresi: 00:00</span>
-      <span id="pill-grade" class="pill pill-grade">🏅 Zaman Notu: —</span>
-      <span id="pill-tokens" class="pill">⚡ Token: 0</span>
-      <button id="btn-parent-report" class="btn btn-primary">📊 Ödev Geçmişi & Notlar</button>
-      <button id="btn-logout" class="btn btn-soft">Çıkış</button>
+      <span id="pill-timer" class="pill pill-timer"><i data-lucide="clock" class="icon-sm"></i> <span>Ödev Süresi: 00:00</span></span>
+      <span id="pill-grade" class="pill pill-grade"><i data-lucide="award" class="icon-sm"></i> <span>Zaman Notu: —</span></span>
+      <span id="pill-tokens" class="pill"><i data-lucide="zap" class="icon-sm"></i> <span>Token: 0</span></span>
+      <button id="btn-parent-report" class="btn btn-primary"><i data-lucide="bar-chart-3" class="icon-sm"></i> Ödev Geçmişi & Notlar</button>
+      <button id="btn-logout" class="btn btn-soft"><i data-lucide="log-out" class="icon-sm"></i> Çıkış</button>
     </div>
   </header>
 
   <main class="classroom-grid">
     <!-- SOL PANEL -->
     <aside class="soft-card">
+      <div class="new-hw-container" style="margin-bottom: 12px;">
+        <button type="button" id="btn-new-homework" class="btn-new-hw-prominent">
+          <i data-lucide="plus-circle" class="icon-sm"></i>
+          <span>Yeni Ödev / Soru Başlat</span>
+        </button>
+      </div>
+
       <div class="panel-head">
-        <h2>📚 Ödev Dersi</h2>
+        <h2><i data-lucide="book-open" class="icon-head"></i> Ödev Dersi</h2>
         <span class="muted">Seç</span>
       </div>
       <div id="subject-chips" class="subject-chips"></div>
 
       <div class="panel-head" style="margin-top:4px;">
-        <h2>📄 Ödev Sayfaları Geçmişi</h2>
+        <h2><i data-lucide="folder-clock" class="icon-head"></i> Ödev Sayfaları Geçmişi</h2>
         <span id="sheets-count" class="muted">0 sayfa</span>
       </div>
       <div id="sheets-list" class="bank-list"></div>
 
       <div class="panel-head" style="margin-top:4px;">
-        <h2>🧠 Sayfa Soruları (Oldu/Olmadı)</h2>
+        <h2><i data-lucide="list-checks" class="icon-head"></i> Sayfa Soruları</h2>
         <span id="hw-count" class="muted">0/0 oldu</span>
       </div>
       <div id="hw-list" class="bank-list"></div>
@@ -57,21 +63,48 @@
     <!-- ORTA PANEL -->
     <section class="soft-card">
       <div class="panel-head">
-        <h2>🧑‍🏫 Ev Ödevi Akıllı Tahtası</h2>
-        <div style="display:flex;gap:6px;">
-          <button id="btn-toggle-pen" class="btn btn-outline">✏️ Kalemi Aç</button>
-          <button id="btn-clear-pen" class="btn btn-soft">🧹 Temizle</button>
+        <h2><i data-lucide="presentation" class="icon-head"></i> Ev Ödevi Akıllı Tahtası</h2>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button id="btn-toggle-doc" class="btn btn-outline" title="Yüklenen ödev kağıdını referans olarak göster/gizle">
+            <i data-lucide="file-text" class="icon-sm"></i> <span>Orijinal Kağıt</span>
+          </button>
+          <button id="btn-toggle-pen" class="btn btn-outline"><i data-lucide="pen-tool" class="icon-sm"></i> <span>Kalemi Aç</span></button>
+          <button id="btn-undo-pen" class="btn btn-outline" title="Çizimi Geri Al" disabled><i data-lucide="undo-2" class="icon-sm"></i> <span>Geri Al</span></button>
+          <button id="btn-redo-pen" class="btn btn-outline" title="Çizimi İleri Al" disabled><i data-lucide="redo-2" class="icon-sm"></i> <span>İleri Al</span></button>
+          <button id="btn-clear-pen" class="btn btn-soft" title="Çizimleri Temizle"><i data-lucide="eraser" class="icon-sm"></i> <span>Temizle</span></button>
         </div>
       </div>
 
-      <div class="board-wrap">
-        <canvas id="student-draw-canvas"></canvas>
-        <div id="wb-title" class="board-title">📄 Ev Ödevi Akıllı Tahtası</div>
-        <div id="wb-latex" class="board-latex hidden"></div>
-        <div id="wb-svg" class="board-svg"></div>
-        <div id="wb-steps" class="board-steps">
-          <div class="board-step">Ödev sayfanı kameradan göster veya aşağıdan fotoğraf/PDF olarak yükle!</div>
-          <div class="board-step">Elif Öğretmen önce soruyu okuyup anlatacak, sonra cevabı birlikte bulacaksınız.</div>
+      <div class="board-stage-container">
+        <div class="board-wrap">
+          <canvas id="student-draw-canvas"></canvas>
+          <div id="pen-active-badge" class="pen-active-badge hidden">
+            <i data-lucide="pen-tool" class="icon-xs"></i> <span>Kalem Açık (Tahtaya Çizebilirsin)</span>
+          </div>
+          <div id="wb-title" class="board-title">Ev Ödevi Akıllı Tahtası</div>
+          <div id="wb-latex" class="board-latex hidden"></div>
+          <div id="wb-svg" class="board-svg"></div>
+          <div id="wb-steps" class="board-steps">
+            <div class="board-step">Ödev sayfanı kameradan göster veya aşağıdan fotoğraf/PDF olarak yükle!</div>
+            <div class="board-step">Elif Öğretmen önce soruyu okuyup anlatacak, sonra cevabı birlikte bulacaksınız.</div>
+          </div>
+        </div>
+
+        <!-- Orijinal Kağıt Referans Paneli (Split View) -->
+        <div id="original-doc-drawer" class="original-doc-drawer hidden">
+          <div class="original-doc-header">
+            <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:0.8rem;color:var(--brand-blue-deep);">
+              <i data-lucide="image" class="icon-xs"></i> <span>Yüklenen Ödev Kağıdı</span>
+            </div>
+            <button type="button" id="btn-close-doc" class="doc-close-btn" title="Kapat"><i data-lucide="x" class="icon-xs"></i></button>
+          </div>
+          <div class="original-doc-viewport">
+            <img id="original-doc-img" src="" alt="Ödev Kağıdı" class="hidden" />
+            <div id="original-doc-empty" class="original-doc-empty">
+              <i data-lucide="image-off" class="icon-md muted"></i>
+              <span class="muted">Bu ödeve ait fotoğraf henüz yüklenmedi.</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -80,10 +113,10 @@
         <canvas id="cam-snap-canvas" class="hidden"></canvas>
         <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="btn-toggle-cam" class="btn btn-outline">📷 Defter Kamerasını Aç</button>
-            <button id="btn-snap-cam" class="btn btn-primary" disabled>📸 Ödev Sayfasını Göster</button>
+            <button id="btn-toggle-cam" class="btn btn-outline"><i data-lucide="camera" class="icon-sm"></i> Defter Kamerasını Aç</button>
+            <button id="btn-snap-cam" class="btn btn-primary" disabled><i data-lucide="aperture" class="icon-sm"></i> Ödev Sayfasını Göster</button>
             <input id="input-img-file" type="file" accept="image/*,.pdf" class="hidden" />
-            <button id="btn-upload-img" class="btn btn-emerald">📄 Ödev Sayfası Yükle (Fotoğraf / PDF)</button>
+            <button id="btn-upload-img" class="btn btn-emerald"><i data-lucide="upload-cloud" class="icon-sm"></i> Ödev Sayfası Yükle (Fotoğraf / PDF)</button>
           </div>
           <span class="muted">Tüm ödevlerin, cevapların, geçen süre ve Ödev Zamanı Notun Frappe veritabanına kaydedilir.</span>
         </div>
@@ -91,31 +124,88 @@
     </section>
 
     <!-- SAĞ PANEL -->
-    <aside class="soft-card">
+    <aside class="soft-card chat-column">
       <div class="panel-head">
-        <h2>👩‍🏫 Elif Öğretmen (3D)</h2>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <h2 id="teacher-display-name"><i data-lucide="sparkles" class="icon-head"></i> Elif Öğretmen</h2>
+          <button type="button" id="btn-open-teacher-modal" class="teacher-badge-btn" title="Öğretmenini ve Sesini Değiştir">
+            <i data-lucide="users" class="icon-xs"></i> <span>Öğretmen Seç</span>
+          </button>
+        </div>
         <span id="voice-status" class="muted">Hazır</span>
       </div>
 
       <div id="avatar-3d-container" class="avatar-stage">
-        <span id="avatar-emotion-pill" class="avatar-badge">😊 Ödev Sayfası Bekliyor</span>
+        <div id="teacher-portrait-overlay" class="teacher-portrait-overlay hidden">
+          <img id="teacher-portrait-img" src="/assets/elif_tutor/images/teachers/elif.svg" alt="Öğretmen" />
+        </div>
+        <span id="avatar-emotion-pill" class="avatar-badge"><i data-lucide="message-square" class="icon-xs"></i> <span>Ödev Sayfası Bekliyor</span></span>
       </div>
 
       <div class="voice-controls">
         <button id="btn-voice-action" class="btn btn-emerald" style="flex:1;">
-          🎙️ Sesli Cevap Ver
+          <i data-lucide="mic" class="icon-sm"></i> <span>Sesli Cevap Ver</span>
         </button>
         <button id="btn-voice-cancel" class="btn btn-soft hidden" title="Kaydı iptal et">
-          ✖ İptal
+          <i data-lucide="x" class="icon-sm"></i> <span>İptal</span>
         </button>
       </div>
       <div id="voice-transcript-box" class="voice-transcript hidden"></div>
 
       <div id="chat-feed" class="chat-feed"></div>
 
-      <form id="chat-form" class="chat-form">
-        <input id="chat-input" type="text" placeholder="Cevabını yaz veya yukarıdan sesli söyle..." />
-        <button type="submit" class="btn btn-primary">Gönder</button>
+      <!-- Hızlı Cevap Çipleri (Quick Reply Chips) -->
+      <div id="quick-reply-chips" class="quick-chips-row">
+        <button type="button" class="quick-chip-btn" data-reply="Anlamadım, tekrar anlatır mısın?">
+          <i data-lucide="help-circle" class="icon-xs"></i> <span>Anlamadım</span>
+        </button>
+        <button type="button" class="quick-chip-btn" data-reply="Bir ipucu alabilir miyim?">
+          <i data-lucide="lightbulb" class="icon-xs"></i> <span>İpucu Ver</span>
+        </button>
+        <button type="button" class="quick-chip-btn" data-reply="Bu adımı doğru mu yaptım?">
+          <i data-lucide="check-circle-2" class="icon-xs"></i> <span>Doğru mu?</span>
+        </button>
+        <button type="button" class="quick-chip-btn" data-reply="Sıradaki soruya geçelim!">
+          <i data-lucide="arrow-right" class="icon-xs"></i> <span>Sonraki Soru</span>
+        </button>
+      </div>
+
+      <!-- Modern Çok Satırlı AI Prompt Kartı -->
+      <form id="chat-form" class="chat-composer-form">
+        <div class="chat-prompt-card">
+          <!-- Dosya Eki Önizleme Çipi -->
+          <div id="chat-attachment-preview" class="chat-attachment-preview hidden">
+            <div class="attachment-chip">
+              <span id="attachment-icon-wrap" class="attachment-icon-wrap"><i data-lucide="file-text" class="icon-xs"></i></span>
+              <img id="attachment-thumb" class="attachment-thumb hidden" alt="Önizleme" />
+              <div class="attachment-meta">
+                <span id="attachment-name" class="attachment-name"></span>
+                <span id="attachment-size" class="attachment-size muted"></span>
+              </div>
+              <button type="button" id="btn-remove-attachment" class="attachment-remove-btn" title="Dosyayı kaldır">
+                <i data-lucide="x" class="icon-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <textarea id="chat-input" rows="2" placeholder="Sorunu yaz, dosya ekle veya sesle söyle..."></textarea>
+          
+          <input type="file" id="input-chat-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.avif,.jfif,.heic,image/*,application/pdf" class="hidden" />
+          
+          <div class="prompt-bottom-bar">
+            <div class="prompt-actions-left">
+              <button type="button" id="btn-chat-attach" class="prompt-action-pill" title="Ödev Dosyası Ekle (PDF, PNG, JPG, WEBP, AVIF, JFIF)">
+                <i data-lucide="paperclip" class="icon-sm"></i> <span>Dosya Ekle</span>
+              </button>
+              <button type="button" id="btn-chat-mic-inline" class="prompt-mic-btn" title="Sesli Cevap Ver">
+                <i data-lucide="mic" class="icon-sm"></i> <span>Sesle Söyle</span>
+              </button>
+            </div>
+            <button type="submit" id="btn-chat-submit" class="prompt-send-btn" title="Gönder">
+              <i data-lucide="send" class="icon-sm"></i> <span>Gönder</span>
+            </button>
+          </div>
+        </div>
       </form>
     </aside>
   </main>
@@ -125,7 +215,7 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <h3 id="app-modal-title">Bilgi</h3>
-        <button type="button" id="app-modal-close" class="modal-close-btn" aria-label="Kapat">✕</button>
+        <button type="button" id="app-modal-close" class="modal-close-btn" aria-label="Kapat"><i data-lucide="x" class="icon-sm"></i></button>
       </div>
       <div id="app-modal-body" class="modal-body"></div>
       <div class="modal-footer">
@@ -135,8 +225,8 @@
   </div>
   <div id="app-toast-stack" class="toast-stack" aria-live="polite"></div>
 
-  <script src="/assets/elif_tutor/js/whiteboard.js?v=5"></script>
-  <script src="/assets/elif_tutor/js/avatar3d.js?v=5"></script>
-  <script src="/assets/elif_tutor/js/odev_app.js?v=5"></script>
+  <script src="/assets/elif_tutor/js/whiteboard.js?v=11"></script>
+  <script src="/assets/elif_tutor/js/avatar3d.js?v=11"></script>
+  <script src="/assets/elif_tutor/js/odev_app.js?v=15"></script>
 </body>
 </html>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Elif Öğretmen</title>
+  <desc id="desc">Açık kitap ve dolma kalem simgesiyle Elif Öğretmen logosu.</desc>
+  <g fill="none" stroke="#4a0e2e" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Open book -->
+    <path d="M45 208 C91 177 145 178 194 211 C239 178 291 177 338 208" stroke-width="10"/>
+    <path d="M45 208 L45 255 C96 225 146 231 194 263 C242 231 291 225 338 255 L338 208" stroke-width="8"/>
+    <path d="M194 211 L194 263" stroke-width="7"/>
+    <path d="M66 228 C109 209 148 215 180 236 M218 236 C250 215 285 209 318 228" stroke-width="4" opacity=".8"/>
+    <!-- Feather / pen -->
+    <path d="M188 194 C185 145 207 93 271 43 C270 104 246 151 198 195 Z" fill="#4a0e2e" stroke-width="3"/>
+    <path d="M197 185 C219 137 239 94 267 52 M215 146 L245 139 M229 116 L255 108" stroke="#fff" stroke-width="3" opacity=".85"/>
+    <path d="M188 192 L179 213 L197 203 Z" fill="#4a0e2e" stroke-width="2"/>
+  </g>
+  <text x="385" y="190" fill="#4a0e2e" font-family="Georgia, 'Times New Roman', serif" font-size="112" font-weight="600" letter-spacing="-3">Elif Öğretmen</text>
+  <path d="M390 231 C560 246 730 239 875 231 C1000 224 1090 226 1160 248" fill="none" stroke="#4a0e2e" stroke-width="5" stroke-linecap="round"/>
+</svg>
